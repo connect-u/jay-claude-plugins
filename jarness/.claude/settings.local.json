@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs ls:*)",
+      "Bash(find /Users/jay/.claude/plugins/cache/claude-plugins-official/plugin-dev -name *.md -type f)",
+      "Bash(find /Users/jay/.claude/plugins/cache/claude-plugins-official/plugin-dev -path *plugin-settings* -type f)",
+      "Bash(find /Users/jay/.claude -name *.json -type f)",
+      "Bash(find /Users/jay/.claude/plugins/cache -name *.md -type f)",
+      "Bash(find /Users/jay/.claude/plugins/cache/claude-plugins-official -name *.md -type f)",
+      "Bash(find /Users/jay/.claude -type f -name *.json)",
+      "Bash(grep -E \"\\\\.\\(json|ts|js\\)$\")",
+      "Bash(npm view:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(find /Users/jay/.claude -type f \\\\\\(-name *playwright* -o -name .env* \\\\\\))",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:playwright.dev)",
+      "Bash(npm info:*)",
+      "Bash(find /Users/jay/.claude -type f -name *.md)",
+      "WebSearch",
+      "WebFetch(domain:www.mintlify.com)",
+      "WebFetch(domain:testcollab.com)",
+      "WebFetch(domain:mcpservers.org)",
+      "WebFetch(domain:www.npmjs.com)",
+      "Read(//private/tmp/**)",
+      "Bash(npm pack:*)",
+      "Bash(tar -tzf playwright-mcp-0.0.70.tgz)",
+      "Bash(chmod +x /Users/jay/jay-projects/claude-plugins/jarness/hooks/detect-jarness.sh)",
+      "Bash(xargs -I {} sh -c \"echo \"\"=== {} ===\"\" && cat \"\"{}\"\"\")"
+    ]
+  }
+}

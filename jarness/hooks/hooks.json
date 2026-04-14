@@ -1,0 +1,15 @@
+{
+  "description": "Detect existing jarness project on session start",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/detect-jarness.sh\""
+          }
+        ]
+      }
+    ]
+  }
+}

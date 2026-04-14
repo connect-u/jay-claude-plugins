@@ -1,0 +1,8 @@
+{
+  "name": "cc-git",
+  "version": "0.1.7",
+  "description": "Git-like project memory system for Claude Code sessions",
+  "author": {
+    "name": "jay"
+  }
+}
