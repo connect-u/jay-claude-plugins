@@ -3,7 +3,7 @@ description: Bootstrap jarness for a new project. Runs collect→architect→eva
 allowed-tools: Read, Write, Grep, Glob, Agent, AskUserQuestion
 args:
   - name: overview
-    description: "Optional brief service description (e.g. 'React + Node 투두앱'). If provided, collector uses it as starting context."
+    description: "Optional brief service description (e.g. 'React + Node todo app'). If provided, collector uses it as starting context."
     required: false
 ---
 
