@@ -31,16 +31,16 @@ Evaluate:
 - Are edge cases handled gracefully?
 - Are there concrete issues? (dead-end pages, unclear output, missing confirmations, broken flows)
 
-## Cleanup — 반드시 실행
+## Cleanup — mandatory
 
-평가가 끝나면 (verdict와 무관하게) 이 단계에서 시작했거나 발견한 **모든 프로세스를 종료**한다.
+After evaluation (regardless of verdict), terminate **all processes** started or discovered during this step.
 
-1. Setup에서 서비스를 시작했다면, 해당 프로세스를 kill한다.
-2. Docker 컨테이너를 올렸다면 stop + rm 한다.
-3. 확인: 이 feature 평가를 위해 열린 포트가 남아있지 않은지 `lsof -i :<port>` 로 검증한다.
-4. Playwright 브라우저가 열려있다면 닫는다.
+1. If you started a service during setup, kill the process.
+2. If you spun up Docker containers, stop + rm them.
+3. Verify: confirm no ports opened for this feature evaluation remain active via `lsof -i :<port>`.
+4. If a Playwright browser is open, close it.
 
-프로세스가 남은 채로 verdict를 반환하지 마라. Cleanup 실패 시 verdict 앞에 경고를 포함한다.
+Never return a verdict with processes still running. If cleanup fails, include a warning before the verdict.
 
 ## Output
 

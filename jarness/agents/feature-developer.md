@@ -25,9 +25,34 @@ Read every piece of feedback. Make targeted fixes — not a full rewrite unless 
 
 For product feedback (UX issues, flow problems): treat these as real requirements, not suggestions. If the evaluator flagged a confusing user flow or missing feedback state, fix it.
 
+## Decision log
+
+After implementation, add (or update) a `decisions` section in `features/<feature-id>.yaml`.
+
+```yaml
+decisions:
+  - cycle: 1
+    summary: |
+      Key implementation decisions and their rationale.
+    choices:
+      - what: What was chosen
+        why: Reason
+        alternatives: Alternatives considered and rejected
+    notes: |
+      Anything that may affect subsequent features or future refactoring.
+```
+
+What to record:
+- Structural choices (file layout, patterns, library selection, etc.)
+- Decisions involving tradeoffs
+- Reasons for following or deviating from existing code conventions
+- Judgement calls made where the spec was silent
+
+Do not record trivial implementations that directly mirror the spec. On retries, preserve existing decisions and only append entries for the current cycle.
+
 ## Cleanup
 
-구현이 끝나면, 개발 중 시작한 모든 프로세스(dev server, docker, DB 등)를 종료한다. 다음 단계인 evaluator가 자체적으로 서비스를 올려서 검증하므로, developer가 프로세스를 남길 이유가 없다.
+After implementation, terminate all processes started during development (dev server, docker, DB, etc.). The evaluator will start its own services for verification, so there is no reason to leave processes running.
 
 ## Rules
 
