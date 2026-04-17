@@ -47,6 +47,10 @@ Initialize with all features set to `pending`. This file will be updated by the 
 
 Modify only what's needed — do not rewrite unrelated files. If adding features, create new files in `features/` and add entries to `state.yaml`.
 
+## Git commit
+
+After writing all `.jarness/` files, if `.git` exists in the project root, stage `.jarness/` and commit with a message that summarizes the plan that was just designed.
+
 ## Quality bar
 
 Be specific. "Works correctly" is not a verification step. A curl command that checks HTTP 200 with a JSON schema assertion is. "Good UX" is not a product criterion. A Playwright scenario that walks signup → first action → confirmation and checks each step has visible feedback is.

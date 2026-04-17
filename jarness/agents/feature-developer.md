@@ -50,6 +50,10 @@ What to record:
 
 Do not record trivial implementations that directly mirror the spec. On retries, preserve existing decisions and only append entries for the current cycle.
 
+## Git commit
+
+After implementation, if `.git` exists in the project root, stage and commit all changes with a message that summarizes what was actually implemented this cycle.
+
 ## Cleanup
 
 After implementation, terminate all processes started during development (dev server, docker, DB, etc.). The evaluator will start its own services for verification, so there is no reason to leave processes running.
