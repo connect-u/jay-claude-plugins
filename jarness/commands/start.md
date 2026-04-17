@@ -58,7 +58,22 @@ On cycles exhausted: mark as `incomplete` in `state.yaml`. Persist last evaluato
 
 ## After all target features are processed
 
-Delegate to `report-writer` agent.
+Summarize the run from this conversation's context:
+
+```
+# Jarness Run Report
+
+## Summary
+X features complete, Y incomplete, Z pending — N total cycles used
+
+## Features
+- ✅ f001: <title> (N cycles)
+- ❌ f002: <title> (N cycles) — <last evaluator feedback, one line>
+- ⏳ f003: <title> — pending
+
+## Notes
+<Only if something stands out. Skip if nothing notable.>
+```
 
 Then output `<promise>START COMPLETE</promise>`.
 
