@@ -1,7 +1,7 @@
 ---
 name: plan-collector
 description: Collects project requirements through conversation and existing code analysis.
-model: sonnet
+model: inherit
 color: cyan
 tools: ["Read", "Grep", "Glob", "Bash", "AskUserQuestion"]
 ---
