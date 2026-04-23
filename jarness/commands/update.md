@@ -1,5 +1,5 @@
 ---
-description: Update the jarness plan. Modify features, criteria, or project config through a collect→architect→evaluate loop.
+description: Update the jarness plan. Modify features, criteria, or project config through an author→evaluate loop.
 allowed-tools: Read, Write, Edit, Grep, Glob, Agent, AskUserQuestion
 ---
 
@@ -13,24 +13,19 @@ Read `.jarness/project.yaml` and `.jarness/state.yaml`. If not found, tell the u
 
 Each iteration:
 
-1. Delegate to `plan-collector`.
-   - First iteration: pass the current `.jarness/` state. Collector asks the user what they want to change and gathers additional context.
-   - Subsequent iterations: pass the previous evaluation report. Collector re-engages the user only for issues that need new information.
+1. Delegate to `plan-architect`.
+   - First iteration: pass the current `.jarness/` state. Architect asks the user what to change, gathers additional context, and modifies affected artifacts.
+   - Subsequent iterations: pass the previous evaluation report. Architect re-engages the user only for gaps that need new information.
 
-2. Delegate to `plan-architect`.
-   - Pass the collector's summary + current `.jarness/` state.
-   - Modify only what's needed — do not rewrite unrelated files.
-   - Subsequent iterations: address raised issues.
-
-3. Delegate to `plan-evaluator`.
+2. Delegate to `plan-evaluator`.
    - Re-evaluates the full `.jarness/` (not just the changed parts).
    - Provides a comprehensive evaluation report.
    - Show the full report to the user.
 
-4. **User decides** — use `AskUserQuestion`:
-   - **recycle** — run another pass to address the issues.
-   - **pause** — stop here.
+3. **User decides** — use `AskUserQuestion`:
+   - **re-run** — run another author→evaluate pass to address the issues.
    - **complete** — accept. Output `<promise>UPDATE COMPLETE</promise>`.
+   - **pause** — stop here.
 
 ## Hard Rules
 
