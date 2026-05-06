@@ -1,9 +1,9 @@
 ---
-description: Update the jarness plan. Drives revision conversation, then runs lint→evaluate loop with user-controlled decisions.
+description: Add one or more new features to the jarness plan. Drives planning conversation, then runs lint→evaluate loop.
 allowed-tools: Read, Write, Edit, Grep, Glob, Bash, Agent, AskUserQuestion
 ---
 
-You drive the revision phase end-to-end. The user is your collaborator.
+You drive a feature-addition phase end-to-end. The user is your collaborator.
 
 ## Pre-flight
 
@@ -11,7 +11,7 @@ Read `.jarness/project.yaml` and `.jarness/state.yaml`. If not found, tell the u
 
 ## Plan (you do this — no subagent)
 
-Ask the user what to change, gather additional context as needed, and modify the affected artifacts. Same conversational approach as `/jarness:init` — draft as you learn, ask when ambiguous, never decide silently when paths diverge.
+Ask the user what to add, gather context as needed, and design the new feature file(s). Same conversational approach as `/jarness:init` — draft as you learn, ask when ambiguous, never decide silently when paths diverge.
 
 ### When to ask the user
 
@@ -25,13 +25,13 @@ Use `AskUserQuestion` by default. Plain text is only for free-form answers.
 
 Any discrete choice belongs in `AskUserQuestion`. Group related independent questions; ask dependent ones one at a time.
 
-### Modify only what's affected
+### Pick feature IDs
 
-Read existing artifacts before asking redundant questions. Touch only the files the change requires — don't reorganize untouched features.
+Read `features/` to find the highest existing ID. New features take the next IDs in sequence.
 
 ### Verification rigor
 
-When adding or changing verification steps in `features/<id>.yaml`, the same rigor applies as in `/jarness:init`:
+When writing verification steps in new `features/<id>.yaml`, the same rigor applies as in `/jarness:init`:
 
 - Every step must be **executable** — a literal sequence a human or agent can follow.
 - **Concrete expected value applies** → specify exact shape/value/range (e.g. *"POST /todos with `{title:"x"}` → expect 201 with body `{id:<uuid>, title:"x", done:false}`"*).
@@ -40,25 +40,22 @@ When adding or changing verification steps in `features/<id>.yaml`, the same rig
 
 **Anti-pattern**: *"works correctly"*, *"can submit"*, *"no error"*, *"as expected"* — descriptions, not verifications. They trigger false-pass.
 
-If existing criteria in untouched features fall into the anti-pattern, leave them alone unless the user requests a verification cleanup.
-
 ## Hard rules
 
-- Preserve progress in `state.yaml` — completed features stay completed unless the user explicitly says to reset them.
-- If a feature's criteria changed and it was already marked complete in `state.yaml`, flag it for re-evaluation.
-- New features added to `features/` must also be initialized as `pending` in `state.yaml`.
+- Don't touch existing features. Use `/jarness:edit` for modifications.
+- New features must be initialized as `pending` in `state.yaml`.
 
 ## Lint → Evaluate → User loop
 
-Once revisions are written:
+Once new feature file(s) are written:
 
 1. **Delegate to `plan-lint`** — mechanical/structural checks. May auto-fix unambiguous issues. Returns auto-fixes performed and any remaining mechanical issues.
 
    If `plan-lint` reports `issues-remain`, fix them before continuing.
 
-2. **Delegate to `plan-evaluator`** — re-evaluates the full `.jarness/` (not just the changed parts). Show the full report to the user.
+2. **Delegate to `plan-evaluator`** — re-evaluates the full `.jarness/` (not just the new parts). Show the report to the user.
 
-3. **User decides** — use `AskUserQuestion`:
+3. **User decides** via `AskUserQuestion`:
    - **re-run** — address the concerns and repeat the loop.
-   - **complete** — accepted. If `.git` exists, stage `.jarness/` and commit with a message describing the change. Output `<promise>UPDATE COMPLETE</promise>`.
+   - **complete** — accepted. If `.git` exists: append a `## [YYYY-MM-DD] plan | <subject>` line to `.jarness/log.md` (create the file with a one-line header if missing), then stage `.jarness/` (including `log.md`) and commit with a message describing the additions. Output `<promise>ADD COMPLETE</promise>`.
    - **pause** — stop here.

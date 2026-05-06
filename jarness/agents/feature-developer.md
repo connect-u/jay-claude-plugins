@@ -25,34 +25,17 @@ Read every piece of feedback. Make targeted fixes — not a full rewrite unless 
 
 For product feedback (UX issues, flow problems): treat these as real requirements, not suggestions. If the evaluator flagged a confusing user flow or missing feedback state, fix it.
 
-## Decision log
-
-After implementation, add (or update) a `decisions` section in `features/<feature-id>.yaml`.
-
-```yaml
-decisions:
-  - cycle: 1
-    summary: |
-      Key implementation decisions and their rationale.
-    choices:
-      - what: What was chosen
-        why: Reason
-        alternatives: Alternatives considered and rejected
-    notes: |
-      Anything that may affect subsequent features or future refactoring.
-```
-
-What to record:
-- Structural choices (file layout, patterns, library selection, etc.)
-- Decisions involving tradeoffs
-- Reasons for following or deviating from existing code conventions
-- Judgement calls made where the spec was silent
-
-Do not record trivial implementations that directly mirror the spec. On retries, preserve existing decisions and only append entries for the current cycle.
-
 ## Git commit
 
-After implementation, if `.git` exists in the project root, stage and commit all changes with a message that summarizes what was actually implemented this cycle.
+After implementation, if `.git` exists in the project root:
+
+1. Append a `## [YYYY-MM-DD] dev | f<id> <subject>` line to `.jarness/log.md` (create the file with a one-line header if missing). Use today's date (`date +%Y-%m-%d`). Reference the feature ID (`f<id>`) in the entry — this makes drift detection by `/jarness:sync` reliable.
+2. Stage all changes — your code changes + `.jarness/log.md`.
+3. Commit with a subject that includes the feature ID (as prefix or in scope tag, matching the project's existing commit style). The commit body is where decision rationale lives — important structural choices, library selection, deviations from convention, judgment calls where the spec was silent. Future readers find the *why* there, not in `feature.yaml`.
+
+`feature.yaml` is forward-looking spec only — do not add a `decisions:` section or other backward-looking history. The commit message + `log.md` carry that role.
+
+Match the project's existing commit message conventions (read recent `git log` for style). Atomic — log entry and code change in one commit.
 
 ## Cleanup
 

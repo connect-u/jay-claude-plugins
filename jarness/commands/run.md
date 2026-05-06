@@ -16,7 +16,7 @@ params:
     description: Max dev→eval cycles per feature.
 ---
 
-Start a jarness development run.
+Run jarness development.
 
 ## Pre-flight
 
@@ -75,7 +75,7 @@ X features complete, Y incomplete, Z pending — N total cycles used
 <Only if something stands out. Skip if nothing notable.>
 ```
 
-Then output `<promise>START COMPLETE</promise>`.
+Then output `<promise>RUN COMPLETE</promise>`.
 
 ## Hard Rules
 

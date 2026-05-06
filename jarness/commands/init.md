@@ -39,7 +39,7 @@ Downstream agents consume them in isolation:
 
 - `project.yaml` — loaded by every `feature-developer` / `feature-evaluator` invocation. Orientation doc. Must contain: what the project is, how to run it, conventions, external dependencies, verification tooling.
 - `features/<id>.yaml` — loaded alone when that feature is implemented or verified. Self-contained. The developer sees only this file plus `project.yaml`. If a feature depends on another, say so explicitly.
-- `state.yaml` — read and written by `/jarness:start` while looping through features. You initialize all features as `pending`.
+- `state.yaml` — read and written by `/jarness:run` while looping through features. You initialize all features as `pending`.
 
 A downstream agent hitting ambiguity either stalls or guesses. Both are expensive — a bad guess wastes full dev→eval cycles. Your artifacts decide which happens.
 
@@ -83,5 +83,5 @@ Once a draft (or revision) is written:
 
 3. **User decides** — use `AskUserQuestion`:
    - **re-run** — address the concerns. Re-engage the user on the points that need new information, revise artifacts, repeat the loop.
-   - **complete** — plan accepted. If `.git` exists, stage `.jarness/` and commit with a message describing the plan. Output `<promise>INIT COMPLETE</promise>` followed by a 3–5 sentence summary of what was built and the key decisions made.
-   - **pause** — stop here. Resume later with `/jarness:update`.
+   - **complete** — plan accepted. If `.git` exists: append a `## [YYYY-MM-DD] plan | <subject>` line to `.jarness/log.md` (create the file with a one-line header if missing), then stage `.jarness/` (including `log.md`) and commit with a message describing the plan. The log entry's subject should match the commit subject. Output `<promise>INIT COMPLETE</promise>` followed by a 3–5 sentence summary of what was built and the key decisions made.
+   - **pause** — stop here. Resume planning later with `/jarness:add` or `/jarness:edit`.

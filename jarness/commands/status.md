@@ -25,8 +25,9 @@ Keep it scannable — a short table or compact list, not a wall of text.
 ## Next step suggestion
 
 Based on status, suggest one command:
-- Has in-progress features → `/jarness:start --id <id>` (resume one) or `/jarness:start` (resume all)
-- All features pending → `/jarness:start`
-- Specific feature needs retry → `/jarness:start --id <id>`
-- Plan needs changes → `/jarness:update`
+- Has in-progress features → `/jarness:run --id <id>` (resume one) or `/jarness:run` (resume all)
+- All features pending → `/jarness:run`
+- Specific feature needs retry → `/jarness:run --id <id>`
+- Plan needs changes → `/jarness:edit` (modify existing) or `/jarness:add` (add new)
+- Drift between code and docs → `/jarness:sync`
 - Nothing initialized → `/jarness:init`
