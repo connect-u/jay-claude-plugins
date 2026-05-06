@@ -22,6 +22,8 @@ Run jarness development.
 
 Read `.jarness/` to load project state. If not found, tell the user to run `/jarness:init` first.
 
+**Delegate to `plan-lint` for a report-only check** — instruct it not to auto-fix in this context (fixes belong to `/jarness:add` or `/jarness:edit`, which run lint with auto-fix in their loops). If the report shows anything other than `Clean`, surface it to the user, tell them to run `/jarness:add` or `/jarness:edit` to address mechanical issues first, then abort. Don't proceed into dev cycles on broken artifacts.
+
 If no args given, use `AskUserQuestion` to confirm defaults before starting.
 
 ## Feature selection
