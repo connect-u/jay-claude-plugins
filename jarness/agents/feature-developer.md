@@ -29,13 +29,13 @@ For product feedback (UX issues, flow problems): treat these as real requirement
 
 After implementation, if `.git` exists in the project root:
 
-1. Append a `## [YYYY-MM-DD] dev | f<id> <subject>` line to `.jarness/log.md` (create the file with a one-line header if missing). Use today's date (`date +%Y-%m-%d`). Reference the feature ID (`f<id>`) in the entry — this makes drift detection by `/jarness:sync` reliable.
+1. Append a `## [YYYY-MM-DD] dev | <feature-id> <subject>` line to `.jarness/log.md` (create the file with a one-line header if missing). Use today's date (`date +%Y-%m-%d`). The `<feature-id>` is whatever ID this project uses for the feature you just implemented — read it from the feature filename (`features/<feature-id>.yaml`). Including the ID in the log entry is what lets `/jarness:sync` distinguish structured work from ad-hoc.
 2. Stage all changes — your code changes + `.jarness/log.md`.
-3. Commit with a subject that includes the feature ID (as prefix or in scope tag, matching the project's existing commit style). The commit body is where decision rationale lives — important structural choices, library selection, deviations from convention, judgment calls where the spec was silent. Future readers find the *why* there, not in `feature.yaml`.
+3. Commit with a subject that summarizes the implementation. Match the project's existing commit message conventions (read recent `git log` for style) — don't impose a feature-ID prefix unless that's the project's pattern. The commit body is where decision rationale lives — important structural choices, library selection, deviations from convention, judgment calls where the spec was silent. Future readers find the *why* there, not in `feature.yaml`.
 
 `feature.yaml` is forward-looking spec only — do not add a `decisions:` section or other backward-looking history. The commit message + `log.md` carry that role.
 
-Match the project's existing commit message conventions (read recent `git log` for style). Atomic — log entry and code change in one commit.
+Atomic — log entry and code change in one commit.
 
 ## Cleanup
 
