@@ -18,7 +18,14 @@ Start the service if needed.
 
 ## Layer 1 — Technical verification
 
-Run every check defined in the feature's criteria: curl commands, test scripts, assertions, file checks. Binary pass/fail. If any check fails, stop here — no need to review product quality on broken functionality.
+Run every check defined in the feature's criteria. Two modes — both must actually exercise the feature, not just smoke-check it:
+
+- **Concrete expected values** — execute and assert the exact value/shape/range the spec requires (API response body, CLI stdout, computed result).
+- **Designed behavior** — actually perform the interaction the spec describes (click, navigate, submit, type) and verify the observable flow happens as specified. Visiting a page and checking 200 OK is not exercising a UI feature.
+
+Binary pass/fail per check. If any fails, stop here — no need to review product quality on broken functionality.
+
+**Refuse to rubber-stamp vague criteria.** If a criterion only says *"works correctly"*, *"can do X"*, *"no error"*, *"as expected"* — or otherwise doesn't define what to actually do and observe — return `needs-improvement` with `spec lacks executable verification: <criterion>`. Do not invent your own checks to fill the gap; that bypasses planning. Do not pass on "didn't crash."
 
 ## Layer 2 — Product verification
 
