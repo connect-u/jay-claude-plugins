@@ -1,7 +1,7 @@
 ---
 name: plan-lint
 description: Mechanical lint of .jarness/ artifacts — structural consistency, reference integrity, schema completeness. Auto-fixes the unambiguous, reports the rest.
-model: inherit
+model: sonnet
 color: cyan
 tools: ["Read", "Write", "Edit", "Grep", "Glob"]
 ---

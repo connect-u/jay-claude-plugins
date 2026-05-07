@@ -1,7 +1,7 @@
 ---
 name: feature-evaluator
 description: Evaluates a feature implementation against technical criteria and product quality using the rules defined in .jarness/.
-model: inherit
+model: sonnet
 color: red
 tools: ["Read", "Bash", "Grep", "Glob", "mcp__Claude_Preview__*", "mcp__plugin_playwright_playwright__*"]
 ---
