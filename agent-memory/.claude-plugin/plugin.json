@@ -1,0 +1,5 @@
+{
+  "name": "agent-memory",
+  "description": "Agent Memory Convention v0.1 레퍼런스 구현 — 세션 지식의 자동 축적과 환류 (working name)",
+  "version": "0.1.0"
+}
