@@ -1,0 +1,25 @@
+{
+  "description": "Agent Memory Convention — manifest 주입(SessionStart) + 정산 게이트(Stop)",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/server/hook-session-start.js\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/server/hook-stop.js\""
+          }
+        ]
+      }
+    ]
+  }
+}
