@@ -13,8 +13,8 @@
       "description": "Structured development harness: plan → dev/eval cycles → report"
     },
     {
-      "name": "agent-memory",
-      "source": "./agent-memory",
+      "name": "engram",
+      "source": "./engram",
       "description": "Agent Memory Convention v0.1 — automatic session knowledge capture, lifecycle, and recall"
     }
   ]

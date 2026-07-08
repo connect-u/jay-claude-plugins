@@ -1,6 +1,6 @@
 // Agent Memory Convention v0.1 — 정본 IO, 프로젝트 판별, 상태 기계, manifest.
-// 스펙: noname/agent-memory-convention-v0.1-draft-r2.md
-// 구현 결정: noname/IMPLEMENTATION.md
+// 스펙: docs/spec-v0.1-draft-r2.md
+// 구현 결정: docs/IMPLEMENTATION.md
 'use strict';
 const fs = require('fs');
 const path = require('path');
