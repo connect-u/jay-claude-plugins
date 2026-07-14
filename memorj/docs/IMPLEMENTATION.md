@@ -1,6 +1,6 @@
 # Agent Memory Convention — IMPLEMENTATION.md
 
-> 상태: v0.1 구현 완료 (2026-07-08). 구현체 이름: **engram**
+> 상태: v0.1 구현 완료 (2026-07-08). 구현체 이름: **memorj** (구 engram — 2026-07-14 개명)
 > 스펙 문서(spec-v0.1-draft-r2.md)는 의미론만 담는다. 구현 결정은 전부 이 문서에 쌓는다.
 > 대상 하네스: Claude Code (첫 어댑터). 산출물: hook 세트 + MCP 서버.
 

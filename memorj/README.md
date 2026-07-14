@@ -1,11 +1,11 @@
-# engram
+# memorj
 
 Agent Memory Convention v0.1의 레퍼런스 구현 — Claude Code 어댑터.
 
 > 에이전트 세션에서 생성되는 지식이, 사람의 정리 노력 없이, 축적되어
 > 이후의 모든 세션이 — 도구와 무관하게 — 그 위에서 시작하게 한다.
 
-engram(기억 흔적): 경험이 노력 없이 남기는 물리적 기억의 실체 — 이 플러그인이 하는 일 그대로.
+memorj: memory의 y를 j로 — jarness 계보의 말장난. "그거 기억나?" "메모르지."
 
 스펙과 구현 결정 기록은 [`docs/`](docs/) 참조:
 - `spec-v0.1-draft-r2.md` — 규약 스펙 (의미론)
