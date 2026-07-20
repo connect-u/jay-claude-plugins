@@ -1,0 +1,8 @@
+{
+  "name": "build-agent-team",
+  "version": "0.1.0",
+  "description": "Consultation-driven generator: listens to your service, composes an agent team, settles how it works, and sets it up in the repo",
+  "author": {
+    "name": "jay"
+  }
+}
