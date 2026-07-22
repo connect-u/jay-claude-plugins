@@ -1,4 +1,4 @@
-// Agent Memory Convention v0.1 — MCP stdio 서버 (툴 6개, 외부 의존 0)
+// Agent Memory Convention v0.2 — MCP stdio 서버 (툴 6개, 외부 의존 0)
 'use strict';
 const readline = require('readline');
 const lib = require('./lib');
@@ -10,8 +10,11 @@ const TOOLS = [
   {
     name: 'memory_write',
     description:
-      '지식 엔트리 1개를 정본에 기록한다. 대상은 결정(decision)·시행착오(learning)·발견한 제약/사실(fact) — 턴 요약이 아니다. ' +
-      '탄생 상태는 항상 captured (규약이 결정 — state 파라미터 없음). 세션 중 언제든 호출 가능. ' +
+      '지식 엔트리 1개를 정본에 기록한다. 기준은 재획득 비용 — 미래 세션이 다시 지불해야 할 지식' +
+      '(근거를 갖고 대안을 기각한 결정, 조사가 도달한 결론·제약, 시행착오를 통과해 얻은 방법)을 ' +
+      '얻은 그 자리에서 즉시 기록하라. 턴 요약이 아니다. 턴 끝에 몰아 쓰지 마라 — 발견과 기록 사이의 거리가 유실이다. ' +
+      '기록할 가치가 있는지는 묻지 마라 — 그 판단은 승격이 나중에 한다. 다시 해도 비용이 없는 사소한 선택만 거른다. ' +
+      '탄생 상태는 항상 captured (규약이 결정 — state 파라미터 없음). ' +
       '기존 결정이 뒤집힐 때는 supersedes로 대체를 선언하라 (promoted 대상이면 슬롯 상속이 자동 적용된다).',
     inputSchema: {
       type: 'object',
@@ -34,9 +37,11 @@ const TOOLS = [
   {
     name: 'memory_settle',
     description:
-      '정산 선언. 이번 작업에서 빌려 쓴 captured 지식 중 실제 작업을 통과해 활용이 검증된 것들의 id를 promote에 담아 승격을 심판한다. ' +
+      '마감 선언 — 기록한 턴을 마칠 때 호출해 작업 단위를 닫는다. 기록은 이 호출과 무관하게 발견 즉시 memory_write로 이미 일어났어야 한다. ' +
+      '이번 작업에서 빌려 쓴 captured 지식 중 실제 작업을 통과해 활용이 검증된 것들의 id를 promote에 담아 승격을 심판한다. ' +
       '검색해서 읽기만 한 것은 증거가 아니다 — 그 지식 위에서 작업이 실제로 성립했을 때만 승격하라. ' +
-      '이번 작업이 낳은 지식은 이 호출 전에 memory_write로 먼저 기록할 것. 기록할 것도 승격할 것도 없으면 인자 없이 호출한다 (빈 정산 선언).',
+      '승격은 검증을 체감한 순간 in-flow로 호출해도 된다 — 마감 시점은 마지막 기회이지 유일한 기회가 아니다. ' +
+      '승격할 것이 없으면 인자 없이 호출한다 (빈 마감).',
     inputSchema: {
       type: 'object',
       properties: {
@@ -141,7 +146,7 @@ function handle(msg) {
         result: {
           protocolVersion: (params && params.protocolVersion) || '2024-11-05',
           capabilities: { tools: {} },
-          serverInfo: { name: 'memory', version: '0.1.0' },
+          serverInfo: { name: 'memory', version: '0.2.0' },
         },
       });
     } else if (method === 'tools/list') {

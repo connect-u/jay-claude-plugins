@@ -1,5 +1,5 @@
-// Agent Memory Convention v0.1 — 정본 IO, 프로젝트 판별, 상태 기계, manifest.
-// 스펙: docs/spec-v0.1-draft-r2.md
+// Agent Memory Convention v0.2 — 정본 IO, 프로젝트 판별, 상태 기계, manifest.
+// 스펙: docs/spec-v0.1-draft-r2.md (§0~6·8) + docs/spec-v0.2-capture.md (§7 쓰기 경로 대체)
 // 구현 결정: docs/IMPLEMENTATION.md
 'use strict';
 const fs = require('fs');
@@ -15,7 +15,6 @@ const RECENT_K = 10;          // manifest RECENT 창 (epoch)
 const DORMANT_K = 10;         // 검색 휴면 경계 (epoch)
 const GLOBAL_RECENT_N = 10;   // global captured의 RECENT (epoch 없음 → 건수)
 const STOP_BLOCK_MAX = 2;     // Stop hook block 상한 (fail-open)
-const SETTLE_TOOL_USES = 5;   // 정산 요구 문턱: 마지막 정산 이후 tool_use 수
 
 const TYPES = ['decision', 'learning', 'fact'];
 const SCOPES = ['global', 'project'];
@@ -77,6 +76,8 @@ function writeEpoch(memoryDir, n) {
 }
 
 // ---------- 세션 핸드오프 상태 (결정 3·4 — 정본 밖 파생물, 삭제 무해) ----------
+// 두 층: slug 평면 파일 = "현재 세션" 포인터 (MCP 서버의 provenance용 — 서버는 session_id를 모른다),
+//        slug 디렉토리의 세션별 파일 = 마감 게이트 상태 (동시 세션 충돌 방지 — v0.2 §3)
 
 function stateFile(slug) { return path.join(STATE_DIR, slug + '.json'); }
 
@@ -88,6 +89,28 @@ function readState(slug) {
 function writeState(slug, obj) {
   fs.mkdirSync(STATE_DIR, { recursive: true });
   fs.writeFileSync(stateFile(slug), JSON.stringify(obj, null, 2) + '\n');
+}
+
+function gateDir(slug) { return path.join(STATE_DIR, slug); }
+function gateFile(slug, sessionId) { return path.join(gateDir(slug), sessionId + '.json'); }
+
+function readGate(slug, sessionId) {
+  try { return JSON.parse(fs.readFileSync(gateFile(slug, sessionId), 'utf8')); }
+  catch (_) { return null; }
+}
+
+function writeGate(slug, sessionId, obj) {
+  fs.mkdirSync(gateDir(slug), { recursive: true });
+  fs.writeFileSync(gateFile(slug, sessionId), JSON.stringify(obj, null, 2) + '\n');
+}
+
+function listGates(slug) {
+  let files;
+  try { files = fs.readdirSync(gateDir(slug)).filter(f => f.endsWith('.json')); } catch (_) { return []; }
+  return files.map(f => {
+    try { return JSON.parse(fs.readFileSync(path.join(gateDir(slug), f), 'utf8')); }
+    catch (_) { return null; }
+  }).filter(Boolean);
 }
 
 // ---------- 엔트리 IO (frontmatter는 규약이 쓰는 평탄한 부분집합만) ----------
@@ -312,18 +335,25 @@ function buildManifest(ctx) {
   return [
     `[MEMORY MANIFEST — ${ctx.name}, epoch ${cur}]`,
     ...sections,
-    '위 지식의 본문은 memory_read(id), 그 밖의 탐색은 memory_search(query). ' +
-    '작업 중 promoted와 모순되는 결정을 내리면 memory_write의 supersedes로 대체를 선언하라. ' +
-    '작업이 쌓이면 정산하라: 낳은 지식을 memory_write로 기록하고, 빌려 쓴 captured 중 검증된 id를 memory_settle의 promote에 담아 호출.',
+    '위 지식의 본문은 memory_read(id), 그 밖의 탐색은 memory_search(query).',
+    '기록 규약 — 기준은 재획득 비용이다: 다시 얻으려면 또 비용이 드는 지식(근거를 갖고 대안을 기각한 결정, ' +
+    '조사가 도달한 결론·제약, 시행착오를 통과해 얻은 방법)은 얻은 그 자리에서 즉시 memory_write로 기록하라. ' +
+    '기록할 가치가 있는지는 묻지 마라 — 그 판단은 승격이 나중에 한다. 다시 해도 비용이 없는 사소한 선택만 거른다. ' +
+    '턴 끝에 몰아 쓰지 마라 — 발견과 기록 사이의 거리가 유실이다. ' +
+    'promoted와 모순되는 결정을 내리면 memory_write의 supersedes로 대체를 선언하라. ' +
+    '빌려 쓴 captured가 실제 작업을 통과했으면 memory_settle의 promote로 승격하고, ' +
+    '기록한 턴을 마칠 때 memory_settle로 마감하라 (승격할 것 없으면 인자 없이). ' +
+    '서브에이전트에 실질 작업을 위임할 때는 프롬프트에 "재획득 비용이 있는 발견(결정·제약·시행착오)은 보고에 포함하라"를 넣어라.',
   ].join('\n\n');
 }
 
 module.exports = {
   GLOBAL_DIR, STATE_DIR,
-  RECENT_K, DORMANT_K, GLOBAL_RECENT_N, STOP_BLOCK_MAX, SETTLE_TOOL_USES,
+  RECENT_K, DORMANT_K, GLOBAL_RECENT_N, STOP_BLOCK_MAX,
   TYPES, SCOPES,
   resolveProject, entriesDir, globalEntriesDir, projectActive, globalActive,
   readEpoch, writeEpoch, readState, writeState,
+  readGate, writeGate, listGates,
   parseEntry, serializeEntry, listEntries, findEntryById,
   writeEntry, settle, promoteAs, demote, search, buildManifest, isoLocal,
 };

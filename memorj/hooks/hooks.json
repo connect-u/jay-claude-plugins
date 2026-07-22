@@ -1,5 +1,5 @@
 {
-  "description": "Agent Memory Convention — manifest 주입(SessionStart) + 정산 게이트(Stop)",
+  "description": "Agent Memory Convention — manifest 주입(SessionStart) + 서브에이전트 기록 규약 주입(SubagentStart) + 마감 게이트(Stop)",
   "hooks": {
     "SessionStart": [
       {
@@ -7,6 +7,16 @@
           {
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/server/hook-session-start.js\""
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/server/hook-subagent-start.js\""
           }
         ]
       }
