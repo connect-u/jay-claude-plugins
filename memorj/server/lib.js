@@ -395,6 +395,10 @@ function buildManifest(ctx) {
     'it as such an invariant, call memory_pin. Do not pin merely frequently-used knowledge — ' +
     'measurement already keeps it HOT, and it should be allowed to cool when the world changes. ' +
     'If a new decision contradicts an existing entry, declare replacement via memory_write\'s supersedes.',
+    'Commit rhythm — knowledge is born at events, and work products should share that rhythm: ' +
+    'prefer small commits around those moments, and include the .memorj changes with the work they accompany. ' +
+    'A granular commit history is the artifact-side twin of this store — an entry\'s reader should be able to ' +
+    'find the change it came from. History, rollback, and sync of the store itself are delegated to git.',
     'When delegating substantial work to a subagent, include in its prompt: ' +
     '"record discoveries with re-acquisition cost via memory_write and include them in your report."',
     `Language for stored entries and receipts: ${outputLanguage(ctx)}.`,
