@@ -18,8 +18,8 @@ process.stdin.on('end', () => {
   try { input = JSON.parse(raw); } catch (_) {}
 
   const ctx = lib.resolveProject(input.cwd);
-  // 규약 미사용 프로젝트의 세션은 방해하지 않는다
-  if (!lib.projectActive(ctx) && !lib.globalActive()) return;
+  // 규약 미사용 프로젝트의 세션은 방해하지 않는다 (v0.2.1: opt-in = 프로젝트의 .memory 존재)
+  if (!lib.projectActive(ctx)) return;
   if (!input.session_id) return; // 세션 식별 불가 — 게이트 상태를 가를 수 없으니 fail-open
 
   let transcript = '';
@@ -59,8 +59,9 @@ process.stdin.on('end', () => {
   process.stdout.write(JSON.stringify({
     decision: 'block',
     reason:
-      `마감되지 않은 기록 ${unclosed}건이 있다. memory_settle로 마감하라 — ` +
-      '이번 작업에서 빌려 쓴 captured 지식 중 실제 작업을 통과한 id가 있으면 promote에 담고, 없으면 인자 없이 호출한다. ' +
-      '새로 기록할 것은 없다 — 기록은 발견 즉시 이미 했어야 하고, 지금은 닫기만 한다.',
+      `There are ${unclosed} unclosed memory record(s). Close them by calling memory_settle — ` +
+      'if any borrowed captured knowledge proved itself in this work, put those ids in promote; ' +
+      'otherwise call with no arguments. Do not write new records now — records happen at the moment ' +
+      'of discovery; this is only about closing.',
   }) + '\n');
 });

@@ -13,11 +13,10 @@ const STATE_DIR = path.join(GLOBAL_DIR, '.state', 'projects');
 // 구현 상수 (IMPLEMENTATION.md §6 — dogfooding이 판결할 초기값)
 const RECENT_K = 10;          // manifest RECENT 창 (epoch)
 const DORMANT_K = 10;         // 검색 휴면 경계 (epoch)
-const GLOBAL_RECENT_N = 10;   // global captured의 RECENT (epoch 없음 → 건수)
 const STOP_BLOCK_MAX = 2;     // Stop hook block 상한 (fail-open)
 
 const TYPES = ['decision', 'learning', 'fact'];
-const SCOPES = ['global', 'project'];
+// v0.2.1: global 스코프 유예 — 관리층 없는 recall 포착의 오염 반경이 전 프로젝트라서. 재설계는 관리 라운드에서.
 
 // ---------- 프로젝트 판별 (결정 1: 최근접 .memory 마커 → git root → 폴백) ----------
 
@@ -58,10 +57,16 @@ function resolveProject(cwd) {
 }
 
 function entriesDir(memoryDir) { return path.join(memoryDir, 'entries'); }
-function globalEntriesDir() { return entriesDir(GLOBAL_DIR); }
 
 function projectActive(ctx) { return fs.existsSync(ctx.memoryDir); }
-function globalActive() { return fs.existsSync(globalEntriesDir()); }
+
+// .memory/config.json — 정본과 함께 사는 프로젝트별 설정. 현재 키: language (저장 엔트리·영수증 언어, 기본 English)
+function readConfig(memoryDir) {
+  try { return JSON.parse(fs.readFileSync(path.join(memoryDir, 'config.json'), 'utf8')) || {}; }
+  catch (_) { return {}; }
+}
+
+function outputLanguage(ctx) { return readConfig(ctx.memoryDir).language || 'English'; }
 
 // ---------- epoch (스펙 §4.4 — 근사적 단조 증가면 충분, lock 없음) ----------
 
@@ -160,7 +165,7 @@ function listEntries(dir) {
 }
 
 function allEntries(ctx) {
-  return [...listEntries(entriesDir(ctx.memoryDir)), ...listEntries(globalEntriesDir())];
+  return listEntries(entriesDir(ctx.memoryDir)); // v0.2.1: 프로젝트 정본만 (global 유예)
 }
 
 // id 또는 유일한 접미(예: 4hex)로 조회
@@ -190,22 +195,17 @@ function isoLocal(d = new Date()) {
 
 // ---------- 쓰기 (스펙 §5.1 탄생 룰 + §5.3 supersession/슬롯 상속) ----------
 
-function writeEntry({ title, type, body, scope, supersedes }, ctx) {
-  if (!title || !String(title).trim()) throw new Error('title은 필수 — 제목은 발견의 단위 (스펙 §4.1)');
-  if (!TYPES.includes(type)) throw new Error(`type은 ${TYPES.join(' | ')} 중 하나`);
-  if (!SCOPES.includes(scope)) throw new Error(`scope는 ${SCOPES.join(' | ')} 중 하나`);
-  if (!body || !String(body).trim()) throw new Error('body는 필수 — 원 세션 없이 읽혀야 한다 (자기완결성)');
+function writeEntry({ title, type, body, supersedes }, ctx) {
+  if (!title || !String(title).trim()) throw new Error('title is required — the title is the unit of discovery (spec §4.1)');
+  if (!TYPES.includes(type)) throw new Error(`type must be one of: ${TYPES.join(' | ')}`);
+  if (!body || !String(body).trim()) throw new Error('body is required — it must be readable without the original session (self-containment)');
 
-  const isProject = scope === 'project';
-  const memoryDir = isProject ? ctx.memoryDir : GLOBAL_DIR;
+  const memoryDir = ctx.memoryDir;
   const dir = entriesDir(memoryDir);
   fs.mkdirSync(dir, { recursive: true }); // lazy 생성 (결정 1 — init 의식 불요)
 
-  let epoch = null;
-  if (isProject) {
-    epoch = readEpoch(memoryDir);
-    if (epoch === 0) { epoch = 1; writeEpoch(memoryDir, epoch); } // 첫 쓰기 = epoch 1 개시
-  }
+  let epoch = readEpoch(memoryDir);
+  if (epoch === 0) { epoch = 1; writeEpoch(memoryDir, epoch); } // 첫 쓰기 = epoch 1 개시
 
   const state = readState(ctx.slug);
   const fm = {
@@ -213,21 +213,22 @@ function writeEntry({ title, type, body, scope, supersedes }, ctx) {
     title: String(title).trim(),
     type,
     state: 'captured', // 탄생 룰: 전부 captured (§5.1) — 아래 슬롯 상속만 예외
-    scope,
+    scope: 'project', // v0.2.1: global 유예 — 탄생은 project뿐
+    project: ctx.name,
+    epoch,
     created: isoLocal(),
     source: 'claude-code',
     session: state && state.session_id ? state.session_id : null,
     promoted_by: null,
     supersedes: null,
   };
-  if (isProject) { fm.project = ctx.name; fm.epoch = epoch; }
 
   let note = '';
   if (supersedes) {
     const old = findEntryById(supersedes, ctx);
-    if (!old) throw new Error(`supersedes 대상 없음: ${supersedes}`);
+    if (!old) throw new Error(`supersedes target not found: ${supersedes}`);
     if (old.fm.state === 'superseded') {
-      throw new Error(`${old.fm.id}는 이미 superseded (superseded_by: ${old.fm.superseded_by}). 체인의 끝을 supersede할 것`);
+      throw new Error(`${old.fm.id} is already superseded (superseded_by: ${old.fm.superseded_by}). Supersede the end of the chain instead`);
     }
     if (old.fm.state === 'promoted') {
       // 슬롯 상속 — 원자적 스왑 (§5.3): 검증된 슬롯의 내용 갱신
@@ -237,10 +238,10 @@ function writeEntry({ title, type, body, scope, supersedes }, ctx) {
       old.fm.state = 'superseded';
       old.fm.superseded_by = fm.id; // 열람 편의용 파생 역링크
       saveEntry(old);
-      note = `슬롯 상속: ${old.fm.id} → superseded, 새 엔트리 promoted 탄생`;
+      note = `slot inheritance: ${old.fm.id} → superseded, new entry born promoted`;
     } else {
       // captured끼리의 교체: 체인 없음, 옛 엔트리는 자연 휴면에 (§5.3)
-      note = `대상(${old.fm.id})이 captured — 체인 없이 새 captured로 기록, 옛 엔트리는 자연 휴면에 맡김`;
+      note = `target (${old.fm.id}) is captured — recorded as a new captured entry without a chain; the old one is left to natural dormancy`;
     }
   }
 
@@ -253,7 +254,7 @@ function writeEntry({ title, type, body, scope, supersedes }, ctx) {
 
 function transition(id, ctx, fn) {
   const e = findEntryById(id, ctx);
-  if (!e) return { id, result: '대상 없음' };
+  if (!e) return { id, result: 'not found' };
   const result = fn(e);
   if (result.save) saveEntry(e);
   return { id: e.fm.id, title: e.fm.title, result: result.msg };
@@ -261,8 +262,8 @@ function transition(id, ctx, fn) {
 
 function promoteAs(id, by, ctx) {
   return transition(id, ctx, e => {
-    if (e.fm.state === 'promoted') return { save: false, msg: '이미 promoted' };
-    if (e.fm.state === 'superseded') return { save: false, msg: 'superseded는 승격 불가 — 후계자를 볼 것' };
+    if (e.fm.state === 'promoted') return { save: false, msg: 'already promoted' };
+    if (e.fm.state === 'superseded') return { save: false, msg: 'superseded entries cannot be promoted — see its successor' };
     e.fm.state = 'promoted';
     e.fm.promoted_by = by;
     return { save: true, msg: `promoted (by: ${by})` };
@@ -271,10 +272,10 @@ function promoteAs(id, by, ctx) {
 
 function demote(id, ctx) {
   return transition(id, ctx, e => {
-    if (e.fm.state !== 'promoted') return { save: false, msg: `promoted가 아님 (현재: ${e.fm.state})` };
+    if (e.fm.state !== 'promoted') return { save: false, msg: `not promoted (current: ${e.fm.state})` };
     e.fm.state = 'captured'; // captured로 복귀 (§5.5) — 파괴 없음
     e.fm.promoted_by = null;
-    return { save: true, msg: 'captured로 강등' };
+    return { save: true, msg: 'demoted to captured' };
   });
 }
 
@@ -285,7 +286,7 @@ function settle(promoteIds, ctx) {
 // ---------- 검색 (결정 3 — grep 기반, 휴면은 랭킹으로) ----------
 
 function search(query, ctx, includeSuperseded = false) {
-  if (!query || !String(query).trim()) throw new Error('query는 필수');
+  if (!query || !String(query).trim()) throw new Error('query is required');
   const q = String(query).toLowerCase();
   const cur = readEpoch(ctx.memoryDir);
   const hits = [];
@@ -314,44 +315,43 @@ function search(query, ctx, includeSuperseded = false) {
 function buildManifest(ctx) {
   const cur = readEpoch(ctx.memoryDir);
   const proj = listEntries(entriesDir(ctx.memoryDir));
-  const glob = listEntries(globalEntriesDir());
   const fmt = e => `[${e.fm.type}] ${e.fm.title}  (id: ${e.fm.id})`;
 
-  const gPromoted = glob.filter(e => e.fm.state === 'promoted');
-  const pPromoted = proj.filter(e => e.fm.state === 'promoted');
-  const pRecent = proj.filter(e =>
+  const promoted = proj.filter(e => e.fm.state === 'promoted');
+  const recent = proj.filter(e =>
     e.fm.state === 'captured' && typeof e.fm.epoch === 'number' && cur - e.fm.epoch < RECENT_K);
-  const gRecent = glob.filter(e => e.fm.state === 'captured')
-    .sort((a, b) => String(b.fm.created || '').localeCompare(String(a.fm.created || '')))
-    .slice(0, GLOBAL_RECENT_N);
 
   const sections = [];
-  if (gPromoted.length) sections.push(`[PROMOTED — global: 프로젝트 무관 진실]\n${gPromoted.map(fmt).join('\n')}`);
-  if (pPromoted.length) sections.push(`[PROMOTED — 이 프로젝트의 진실]\n${pPromoted.map(fmt).join('\n')}`);
-  const recent = [...pRecent.map(fmt), ...gRecent.map(e => fmt(e) + ' [global]')];
-  if (recent.length) sections.push(`[RECENT — 미검증 후보 (최근 ${RECENT_K} epoch)]\n${recent.join('\n')}`);
+  if (promoted.length) sections.push(`[PROMOTED — established truths of this project]\n${promoted.map(fmt).join('\n')}`);
+  if (recent.length) sections.push(`[RECENT — unverified candidates (last ${RECENT_K} epochs)]\n${recent.map(fmt).join('\n')}`);
   if (!sections.length) return '';
 
   return [
     `[MEMORY MANIFEST — ${ctx.name}, epoch ${cur}]`,
     ...sections,
-    '위 지식의 본문은 memory_read(id), 그 밖의 탐색은 memory_search(query).',
-    '기록 규약 — 기준은 재획득 비용이다: 다시 얻으려면 또 비용이 드는 지식(근거를 갖고 대안을 기각한 결정, ' +
-    '조사가 도달한 결론·제약, 시행착오를 통과해 얻은 방법)은 얻은 그 자리에서 즉시 memory_write로 기록하라. ' +
-    '기록할 가치가 있는지는 묻지 마라 — 그 판단은 승격이 나중에 한다. 다시 해도 비용이 없는 사소한 선택만 거른다. ' +
-    '턴 끝에 몰아 쓰지 마라 — 발견과 기록 사이의 거리가 유실이다. ' +
-    'promoted와 모순되는 결정을 내리면 memory_write의 supersedes로 대체를 선언하라. ' +
-    '빌려 쓴 captured가 실제 작업을 통과했으면 memory_settle의 promote로 승격하고, ' +
-    '기록한 턴을 마칠 때 memory_settle로 마감하라 (승격할 것 없으면 인자 없이). ' +
-    '서브에이전트에 실질 작업을 위임할 때는 프롬프트에 "재획득 비용이 있는 발견(결정·제약·시행착오)은 보고에 포함하라"를 넣어라.',
+    'Read full entries with memory_read(id); explore older knowledge with memory_search(query).',
+    'Capture rule — the criterion is re-acquisition cost: knowledge that would cost again to regain ' +
+    '(a decision that rejected alternatives with reasons, a conclusion or constraint reached by investigation, ' +
+    'a method earned through trial and error) must be recorded with memory_write at the moment it is gained. ' +
+    'Do not ask whether it is worth recording — that judgment belongs to promotion, later. ' +
+    'Skip only what would cost nothing to redo. Do not batch records at the end of a turn — ' +
+    'distance between discovery and record is loss. ' +
+    'After each memory_write, surface it to the user as a compact receipt block:\n' +
+    '📝 ───────────────\n[type] title  (id: …)\none-line gist\n───────────────\n' +
+    'If a new decision contradicts a promoted entry, declare replacement via supersedes. ' +
+    'When borrowed captured knowledge has proven itself in real work, promote it via memory_settle\'s promote. ' +
+    'Close any turn in which you recorded by calling memory_settle (no arguments if nothing to promote). ' +
+    'When delegating substantial work to a subagent, include in its prompt: ' +
+    '"report any discoveries with re-acquisition cost (decisions, constraints, trial-and-error results)."',
+    `Language for stored entries and receipts: ${outputLanguage(ctx)}.`,
   ].join('\n\n');
 }
 
 module.exports = {
   GLOBAL_DIR, STATE_DIR,
-  RECENT_K, DORMANT_K, GLOBAL_RECENT_N, STOP_BLOCK_MAX,
-  TYPES, SCOPES,
-  resolveProject, entriesDir, globalEntriesDir, projectActive, globalActive,
+  RECENT_K, DORMANT_K, STOP_BLOCK_MAX,
+  TYPES,
+  resolveProject, entriesDir, projectActive, readConfig, outputLanguage,
   readEpoch, writeEpoch, readState, writeState,
   readGate, writeGate, listGates,
   parseEntry, serializeEntry, listEntries, findEntryById,

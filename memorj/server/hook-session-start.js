@@ -10,8 +10,8 @@ process.stdin.on('end', () => {
   try { input = JSON.parse(raw); } catch (_) {}
 
   const ctx = lib.resolveProject(input.cwd);
-  // 규약 미사용(프로젝트·global 모두 비활성) — 완전 침묵. opt-in은 mkdir .memory 또는 첫 memory_write
-  if (!lib.projectActive(ctx) && !lib.globalActive()) return;
+  // 규약 미사용 프로젝트 — 완전 침묵. opt-in은 mkdir .memory 또는 첫 memory_write (v0.2.1: global 유예로 경계 단순화)
+  if (!lib.projectActive(ctx)) return;
 
   const src = input.source || 'startup';
   let warn = '';
@@ -22,17 +22,16 @@ process.stdin.on('end', () => {
     for (const g of lib.listGates(ctx.slug)) {
       if (!g.session_id || g.session_id === input.session_id) continue;
       if (!(g.unclosed > 0) || g.warned_at) continue;
-      warn += `⚠ 이전 세션(${g.session_id})이 기록 ${g.unclosed}건을 마감하지 않고 끝났다. ` +
-        `기록 자체는 정본에 있다 — 누락된 것은 빌려 쓴 지식의 승격 심판뿐이다. ` +
-        `이번 작업에서 그 기록들을 실제로 활용하게 되면 승격을 재심하라. (transcript: ${g.transcript_path})\n`;
+      warn += `⚠ A previous session (${g.session_id}) ended with ${g.unclosed} unclosed record(s). ` +
+        'The records themselves are safe in the canonical store — only the promotion judgment for ' +
+        'borrowed knowledge was skipped. If this session ends up using those records in real work, ' +
+        `reconsider their promotion. (transcript: ${g.transcript_path})\n`;
       g.warned_at = lib.isoLocal();
       lib.writeGate(ctx.slug, g.session_id, g);
     }
     if (warn) warn += '\n';
 
-    if (lib.projectActive(ctx)) {
-      lib.writeEpoch(ctx.memoryDir, lib.readEpoch(ctx.memoryDir) + 1);
-    }
+    lib.writeEpoch(ctx.memoryDir, lib.readEpoch(ctx.memoryDir) + 1);
     // slug 평면 파일 = "현재 세션" 포인터 (MCP 서버의 provenance용)
     lib.writeState(ctx.slug, {
       session_id: input.session_id || null,
