@@ -5,16 +5,6 @@
   },
   "plugins": [
     {
-      "name": "cc-git",
-      "source": "./cc-git",
-      "description": "Git-like project memory system for Claude Code sessions"
-    },
-    {
-      "name": "jarness",
-      "source": "./jarness",
-      "description": "Structured development harness: plan → dev/eval cycles → report"
-    },
-    {
       "name": "memorj",
       "source": "./memorj",
       "description": "Agent Memory Convention — automatic session knowledge capture, lifecycle, and recall"

@@ -1,7 +1,7 @@
 # claude-sync: 설계 문서 (v2)
 
 > **상태:** Draft v2 · 시나리오 검증 반영본
-> **이전 버전:** `../claude-sync-design.md` (v1, 아카이브 예정)
+> **이전 버전:** `design-v1.md` (v1)
 
 ---
 
