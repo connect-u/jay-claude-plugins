@@ -7,7 +7,9 @@ const path = require('path');
 const os = require('os');
 const crypto = require('crypto');
 
-const GLOBAL_DIR = path.join(os.homedir(), '.memory');
+// v0.3.0: 저장 루트는 .memory가 아니라 .memorj — 범용 이름은 opt-in 마커라서 타 도구의 .memory에
+// 오작동 활성화하는 충돌 경로였다 (.git처럼 도구명 디렉토리가 정체성도 명확)
+const GLOBAL_DIR = path.join(os.homedir(), '.memorj');
 const STATE_DIR = path.join(GLOBAL_DIR, '.state', 'projects');
 
 // 구현 상수 (IMPLEMENTATION.md §6 — dogfooding이 판결할 초기값)
@@ -41,18 +43,18 @@ function projectSlug(root) {
 
 function resolveProject(cwd) {
   const start = cwd || process.cwd();
-  // ~/.memory 자체(global 정본)는 프로젝트 마커가 아니다
-  const marker = findUp(start, '.memory', true);
+  // ~/.memorj 자체(사용자 설정·상태의 집)는 프로젝트 마커가 아니다
+  const marker = findUp(start, '.memorj', true);
   if (marker && marker !== os.homedir()) {
-    return { root: marker, memoryDir: path.join(marker, '.memory'), slug: projectSlug(marker), name: path.basename(marker) };
+    return { root: marker, memoryDir: path.join(marker, '.memorj'), slug: projectSlug(marker), name: path.basename(marker) };
   }
   const gitRoot = findUp(start, '.git', false); // worktree의 .git은 파일
   if (gitRoot) {
-    return { root: gitRoot, memoryDir: path.join(gitRoot, '.memory'), slug: projectSlug(gitRoot), name: path.basename(gitRoot) };
+    return { root: gitRoot, memoryDir: path.join(gitRoot, '.memorj'), slug: projectSlug(gitRoot), name: path.basename(gitRoot) };
   }
   const root = path.resolve(start);
   const slug = projectSlug(root);
-  // git 없는 디렉토리에는 .memory를 만들지 않는다 — 정본은 global 쪽 폴백 (스펙 §3)
+  // git 없는 디렉토리에는 .memorj를 만들지 않는다 — 정본은 ~/.memorj/projects 폴백 (스펙 §3)
   return { root, memoryDir: path.join(GLOBAL_DIR, 'projects', slug), slug, name: path.basename(root) };
 }
 
@@ -60,10 +62,12 @@ function entriesDir(memoryDir) { return path.join(memoryDir, 'entries'); }
 
 function projectActive(ctx) { return fs.existsSync(ctx.memoryDir); }
 
-// .memory/config.json — 정본과 함께 사는 프로젝트별 설정. 현재 키: language (저장 엔트리·영수증 언어, 기본 English)
+// 설정 폴백 체인: 프로젝트 .memory/config.json > 사용자 ~/.memory/config.json > 기본값.
+// 언어는 사용자 성향이라 프로젝트마다 수동 생성을 요구하면 보장 1(사람 규율 0) 위반 — 프로젝트 파일은
+// "공유 저장소의 언어 고정" 같은 오버라이드 용도만. 현재 키: language (저장 엔트리·영수증 언어, 기본 English)
 function readConfig(memoryDir) {
-  try { return JSON.parse(fs.readFileSync(path.join(memoryDir, 'config.json'), 'utf8')) || {}; }
-  catch (_) { return {}; }
+  const read = f => { try { return JSON.parse(fs.readFileSync(f, 'utf8')) || {}; } catch (_) { return {}; } };
+  return { ...read(path.join(GLOBAL_DIR, 'config.json')), ...read(path.join(memoryDir, 'config.json')) };
 }
 
 function outputLanguage(ctx) { return readConfig(ctx.memoryDir).language || 'English'; }

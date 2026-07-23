@@ -156,7 +156,7 @@ function handle(msg) {
         result: {
           protocolVersion: (params && params.protocolVersion) || '2024-11-05',
           capabilities: { tools: {} },
-          serverInfo: { name: 'memory', version: '0.2.1' },
+          serverInfo: { name: 'memorj', version: '0.3.0' },
         },
       });
     } else if (method === 'tools/list') {

@@ -21,7 +21,7 @@ process.stdin.on('end', () => {
         '[memorj capture rule] Knowledge gained in this task that has re-acquisition cost — ' +
         'a decision that rejected alternatives with reasons, a conclusion or constraint reached by ' +
         'investigation, a method earned through trial and error — must be recorded immediately with ' +
-        'the memory_write tool (mcp__*memory__memory_write; load it via ToolSearch if not visible). ' +
+        'the memory_write tool (from the memorj MCP server; load it via ToolSearch if not visible). ' +
         'Do not ask whether it is worth recording — that judgment happens later at promotion. ' +
         'Skip only what would cost nothing to redo. ' +
         `Write entry titles and bodies in ${lib.outputLanguage(ctx)}. ` +
