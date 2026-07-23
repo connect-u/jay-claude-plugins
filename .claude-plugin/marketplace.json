@@ -1,6 +1,8 @@
 {
   "name": "jay-claude-plugins",
-  "owner": { "name": "jay" },
+  "owner": {
+    "name": "jay"
+  },
   "plugins": [
     {
       "name": "cc-git",
@@ -15,7 +17,7 @@
     {
       "name": "memorj",
       "source": "./memorj",
-      "description": "Agent Memory Convention v0.1 — automatic session knowledge capture, lifecycle, and recall"
+      "description": "Agent Memory Convention — automatic session knowledge capture, lifecycle, and recall"
     },
     {
       "name": "build-agent-team",
