@@ -1,5 +1,4 @@
-// Stop hook — tick 메트로놈 (스펙 v0.3 §4.4). 게이트는 은퇴했다 (§3.2).
-// 매 턴 종료 = LLM 연산 1회. epoch(작업 단위)보다 곱고 ts(달력)와 달리 활동 기준인 시계.
+// SubagentStop hook — tick 메트로놈 (스펙 v0.3 §4.4). 서브에이전트 완료도 LLM 연산량이다.
 // 침묵 — 출력 없음, 카운터만 +1.
 'use strict';
 const lib = require('./lib');
